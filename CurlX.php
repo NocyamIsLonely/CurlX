@@ -88,6 +88,7 @@ class Response {
 class CurlX extends Helper
 {
     private array $default = [
+        CURLOPT_USERAGENT => 'CurlX v2.0.1b (Created by @d3vbl4ck)',
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_HEADER         => false,
         CURLINFO_HEADER_OUT    => true,
@@ -107,7 +108,6 @@ class CurlX extends Helper
     private stdClass $callback;
 
     private string $cookieFile = '';
-    private string $userAgent = 'CurlX v2.0.1b (Created by @d3vbl4ck)';
 
     private int $error_code;
     private string $error_string;
@@ -274,7 +274,6 @@ class CurlX extends Helper
     {
         $this->prepareHandle($url);
 
-        $this->setOpt([CURLOPT_USERAGENT => $this->userAgent]);
         $this->checkParams($headers, $cookie, $server);
         return $this->run();
     }
@@ -293,7 +292,6 @@ class CurlX extends Helper
         $this->prepareHandle($url);
 
         $this->setOpt([
-            CURLOPT_USERAGENT      => $this->userAgent,
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => $this->dataType($data)
         ]);
@@ -316,7 +314,6 @@ class CurlX extends Helper
         $this->prepareHandle($url);
 
         $this->setOpt([
-            CURLOPT_USERAGENT      => $this->userAgent,
             CURLOPT_CUSTOMREQUEST  => $method,
             CURLOPT_POSTFIELDS     => $this->dataType($data)
         ]);
