@@ -1,0 +1,29 @@
+{
+    "name": "nocyam/curlx",
+    "description": "A simple HTTP library for requests.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nocyam",
+            "role": "Developer"
+        },
+        {
+            "name": "devblack",
+            "role": "Original Author",
+            "homepage": "https://github.com/devblack/curlx"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "ext-curl": "*"
+    },
+    "autoload": {
+        "classmap": [
+            "CurlX.php",
+            "CurlXTools.php",
+            "CurlXBypass.php"
+        ]
+    },
+    "minimum-stability": "stable"
+}
