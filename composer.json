@@ -22,7 +22,8 @@
         "classmap": [
             "CurlX.php",
             "CurlXTools.php",
-            "CurlXBypass.php"
+            "CurlXBypass.php",
+            "CurlXParser.php"
         ]
     },
     "minimum-stability": "stable"
