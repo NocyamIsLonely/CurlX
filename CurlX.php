@@ -714,15 +714,35 @@ class CurlX
 
     private function printDebug(string $method, string $url, CurlXResponse $r): void
     {
-        $isCli = PHP_SAPI === 'cli';
-        $nl    = $isCli ? "\n" : "<br>";
-        $sep   = str_repeat('─', 60);
+        $isCli  = PHP_SAPI === 'cli';
+        $nl     = $isCli ? "\n" : "<br>";
+        $sep    = str_repeat('─', 60);
+        $isHtml = str_contains($r->header('content-type'), 'html')
+               || str_starts_with(trim($r->body), '<');
 
         echo $sep . $nl;
         echo "[CurlX] $method $url" . $nl;
         echo "Status : {$r->status}" . $nl;
         echo "Time   : {$r->time}s" . $nl;
-        echo "Body   : " . mb_substr($r->body, 0, 500) . (mb_strlen($r->body) > 500 ? '...' : '') . $nl;
+        echo "Size   : " . number_format(mb_strlen($r->body)) . " bytes" . $nl;
+
+        if ($isCli) {
+            echo "Body   : " . $r->body . "\n";
+        } elseif ($isHtml) {
+            echo "Body   :" . $nl;
+            echo '<textarea style="width:100%;height:500px;font-family:monospace;font-size:12px;background:#1e1e1e;color:#d4d4d4;border:none;padding:10px;box-sizing:border-box;">';
+            echo htmlspecialchars($r->body);
+            echo '</textarea>';
+        } else {
+            $body = $r->isJson()
+                ? json_encode($r->jsonSafe(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                : $r->body;
+            echo "Body   :" . $nl;
+            echo '<pre style="background:#1e1e1e;color:#d4d4d4;padding:10px;overflow:auto;max-height:500px;">';
+            echo htmlspecialchars($body);
+            echo '</pre>';
+        }
+
         echo $sep . $nl;
     }
 }

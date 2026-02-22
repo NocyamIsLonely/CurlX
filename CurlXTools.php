@@ -165,6 +165,7 @@ class CurlXTools
     }
 
     /**
+     * Gera pessoa brasileira via 4devs
      *   $p = $Tools->generatePerson();
      *   echo $p['nome'];
      *   echo $p['cpf'];
@@ -180,6 +181,48 @@ class CurlXTools
 
         $data = $r->jsonSafe();
         return $data[0] ?? [];
+    }
+
+    /**
+     * !!! Not tested
+     * Gera pessoa (EUA) via randomuser.me
+     *   $p = $Tools->generatePersonUS();
+     *   echo $p['first_name'];
+     *   echo $p['email'];
+     */
+    public function generatePersonUS(): array
+    {
+        $r = $this->http->get('https://randomuser.me/api/?nat=us');
+        $data = $r->jsonSafe();
+        
+        $user = $data['results'][0] ?? null;
+        if (!$user) {
+            return [];
+        }
+        
+        return [
+            'gender'     => $user['gender'] ?? '',
+            'title'      => $user['name']['title'] ?? '',
+            'first_name' => $user['name']['first'] ?? '',
+            'last_name'  => $user['name']['last'] ?? '',
+            'name'       => trim(($user['name']['first'] ?? '') . ' ' . ($user['name']['last'] ?? '')),
+            'email'      => $user['email'] ?? '',
+            'username'   => $user['login']['username'] ?? '',
+            'password'   => $user['login']['password'] ?? '',
+            'dob'        => $user['dob']['date'] ?? '',
+            'age'        => $user['dob']['age'] ?? '',
+            'phone'      => $user['phone'] ?? '',
+            'cell'       => $user['cell'] ?? '',
+            'street'     => trim(($user['location']['street']['number'] ?? '') . ' ' . ($user['location']['street']['name'] ?? '')),
+            'city'       => $user['location']['city'] ?? '',
+            'state'      => $user['location']['state'] ?? '',
+            'country'    => $user['location']['country'] ?? '',
+            'postcode'   => (string)($user['location']['postcode'] ?? ''),
+            'latitude'   => $user['location']['coordinates']['latitude'] ?? '',
+            'longitude'  => $user['location']['coordinates']['longitude'] ?? '',
+            'picture'    => $user['picture']['large'] ?? '',
+            'nat'        => $user['nat'] ?? 'US',
+        ];
     }
 
     /**
@@ -217,6 +260,121 @@ class CurlXTools
             $result .= $chars[rand(0, $max)];
         }
         return $result;
+    }
+
+    /**
+     *   $Tools->generateUUID() // '550e8400-e29b-41d4-a716-446655440000'
+     */
+    public function generateUUID(): string
+    {
+        $data = random_bytes(16);
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    }
+    
+    /**
+     *   $Tools->randomUserAgent()             // desktop Chrome/Firefox/Edge/Safari
+     *   $Tools->randomUserAgent('mobile')     // Android e iPhone
+     *   $Tools->randomUserAgent('chrome')     // só Chrome (desktop)
+     *   $Tools->randomUserAgent('firefox')    // só Firefox (desktop)
+     *   $Tools->randomUserAgent('safari')     // só Safari (desktop/mac)
+     *   $Tools->randomUserAgent('edge')       // só Edge
+     *   $Tools->randomUserAgent('all')        // tudo junto
+     *   $Tools->randomUserAgent('desktop', 'meus_uas.txt') // carrega de arquivo
+     */
+    public function randomUserAgent(string $device = 'desktop', string $file = ''): string
+    {
+        if ($file !== '' && file_exists($file)) {
+            $lines = array_filter(
+                file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES),
+                fn($l) => !str_starts_with(trim($l), '#') && str_contains($l, 'Mozilla')
+            );
+            if (!empty($lines)) {
+                $pool = array_values($lines);
+                if ($device === 'mobile') {
+                    $mobile = array_values(array_filter($pool, fn($ua) =>
+                        str_contains($ua, 'Android') || str_contains($ua, 'iPhone') || str_contains($ua, 'Mobile')
+                    ));
+                    if (!empty($mobile)) return trim($mobile[array_rand($mobile)]);
+                }
+                return trim($pool[array_rand($pool)]);
+            }
+        }
+
+        $chrome_win = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        ];
+
+        $chrome_mac = [
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        ];
+
+        $firefox = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:123.0) Gecko/20100101 Firefox/123.0',
+            'Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0',
+        ];
+
+        $safari = [
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+        ];
+
+        $edge = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0',
+        ];
+
+        $mobile_android = [
+            'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+            'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36',
+            'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+            'Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+            'Mozilla/5.0 (Linux; Android 13; SM-S908B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36',
+            'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+            'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+            'Mozilla/5.0 (Linux; Android 12; SM-A536B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+        ];
+
+        $mobile_iphone = [
+            'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+            'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1',
+            'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1',
+            'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1',
+            'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+            'Mozilla/5.0 (iPhone; CPU iPhone OS 16_7_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+        ];
+
+        $desktop = array_merge($chrome_win, $chrome_mac, $firefox, $safari, $edge);
+        $mobile   = array_merge($mobile_android, $mobile_iphone);
+
+        return match($device) {
+            'mobile'  => $mobile[array_rand($mobile)],
+            'chrome'  => array_merge($chrome_win, $chrome_mac)[array_rand(array_merge($chrome_win, $chrome_mac))],
+            'firefox' => $firefox[array_rand($firefox)],
+            'safari'  => $safari[array_rand($safari)],
+            'edge'    => $edge[array_rand($edge)],
+            'android' => $mobile_android[array_rand($mobile_android)],
+            'iphone'  => $mobile_iphone[array_rand($mobile_iphone)],
+            'all'     => array_merge($desktop, $mobile)[array_rand(array_merge($desktop, $mobile))],
+            default    => $desktop[array_rand($desktop)],
+        };
     }
 
     // PROXY 
