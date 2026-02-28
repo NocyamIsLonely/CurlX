@@ -173,15 +173,38 @@ class CurlXResponse
 
     /**
      *   $r->jsonGet('id')
-     *   $r->jsonGet('token', '')
+     *   $r->jsonGet('data.user.token', '')
+     *   $r->jsonGet('items.0.id')
      */
-    public function jsonGet(string $key, mixed $default = null): mixed
+    public function jsonGet(string $path, mixed $default = null): mixed
     {
         $data = $this->jsonSafe();
         if (!is_array($data)) {
             return $default;
         }
-        return $data[$key] ?? $default;
+
+        if ($path === '') {
+            return $default;
+        }
+
+        $segments = array_filter(explode('.', $path), fn($segment) => $segment !== '');
+        if (empty($segments)) {
+            return $default;
+        }
+
+        $current = $data;
+
+        foreach ($segments as $segment) {
+            $key = ctype_digit($segment) ? (int) $segment : $segment;
+
+            if (!is_array($current) || !array_key_exists($key, $current)) {
+                return $default;
+            }
+
+            $current = $current[$key];
+        }
+
+        return $current;
     }
 
     public function isJson(): bool

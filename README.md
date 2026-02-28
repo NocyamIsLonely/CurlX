@@ -242,8 +242,9 @@ $CurlX->setTimeout(10, 30)->setUserAgent('Bot/1.0')->retry(3);
 |------------------------------|----------|-----------------------------------------------|
 | `$r->json()`                 | `mixed`  | Decodifica body como JSON (lança exceção)     |
 | `$r->jsonSafe()`             | `mixed`  | json() sem exceção — retorna null se inválido |
-| `$r->jsonGet('key')`         | `mixed`  | Acessa campo direto com valor padrão          |
-| `$r->jsonGet('key', 'x')`    | `mixed`  | Com valor padrão customizado                  |
+| `$r->jsonGet('key')`              | `mixed`  | Acessa chave simples no JSON                  |
+| `$r->jsonGet('data.user.id')`     | `mixed`  | Acessa caminho aninhado com notação de ponto |
+| `$r->jsonGet('items.0.id', 'x')`  | `mixed`  | Suporta índice de array e valor padrão        |
 | `$r->isJson()`               | `bool`   | true se body for JSON válido                  |
 
 ### Extração de texto
@@ -334,6 +335,10 @@ if ($data) {
 // Ou acessa direto com padrão:
 $status  = $r->jsonGet('status', 'UNKNOWN');
 $message = $r->jsonGet('message', '');
+
+// Caminho aninhado (json path simples):
+$userId  = $r->jsonGet('data.user.id', 0);
+$itemId  = $r->jsonGet('items.0.id', '');
 ```
 
 ---
